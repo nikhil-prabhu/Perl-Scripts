@@ -55,11 +55,14 @@ for ($table->tables) {
   }
 }
 
+# Use UNIX 'more' utility as pager
+open (PAGER, "| more") or die "$!\n";
+
 # Print output table
-print $output_rule . $output->title . $output_rule; # Table header
+print PAGER $output_rule . $output->title . $output_rule; # Table header
 
 for ($output->body) {
-  print $_ . $output_rule;	# Table body
+  print PAGER $_ . $output_rule;	# Table body
 }
 
 unlink $tmpfile;		# Remove temporary file
