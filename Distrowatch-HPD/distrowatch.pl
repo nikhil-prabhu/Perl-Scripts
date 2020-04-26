@@ -31,7 +31,7 @@ if ($params{year}) {
 }
 
 if ($params{top}) {
-  $results = $params{top};
+  $results = $params{top};	# Number of results to display
 }
 
 # Get distrowatch webpage and store it in a temporary file
@@ -57,13 +57,13 @@ for ($table->tables) {
 }
 
 # Use UNIX 'more' utility as pager
-open (PAGER, "| more") or die "$!\n";
+open my $PAGER, "| more" or die "$!\n";
 
 # Print output table
-print PAGER $output_rule . $output->title . $output_rule; # Table header
+$PAGER->print($output_rule . $output->title . $output_rule); # Table header
 
 for ($output->body) {
-  print PAGER $_ . $output_rule;	# Table body
+  $PAGER->print($_ . $output_rule);	# Table body
 }
 
 unlink $tmpfile;		# Remove temporary file
