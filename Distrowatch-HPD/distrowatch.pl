@@ -5,7 +5,8 @@
 #
 # A simple Perl script that retrieves a table containing
 # the top 100 most popular Linux/UNIX based distributions
-# of a particular year (based on page hit ranking).
+# of a particular year from distrowatch.com (based on page
+# hit ranking).
 #
 
 use Modern::Perl;
@@ -23,14 +24,14 @@ my $tmpfile = "$tmpdir/distrowatch.html"; # Temporary file
 my %params;				  # Script parameters
 
 # Get command line parameters
-GetOptions( \%params, "year:s", "n:s" );
+GetOptions( \%params, "year:s", "top:s" );
 
 if ($params{year}) {
   $dataspan = $params{year};	# Custom year
 }
 
-if ($params{n}) {
-  $results = $params{n};
+if ($params{top}) {
+  $results = $params{top};
 }
 
 # Get distrowatch webpage and store it in a temporary file
