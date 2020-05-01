@@ -36,10 +36,25 @@ my $output_rule = $output->rule(qw/- +/); # Table formatting rule
 my %params;				  # Script parameters
 my $results;			# Number of results to display
 
-GetOptions( \%params, "top:s");
+GetOptions( \%params, "top:s", "help");
 
+# Custom number of results to display
 if ( $params{ top } ) {
   $results = $params{ top };
+}
+
+# Help message
+if ( $params{ help } ) {
+  print <<EOF;
+$0:	A simple Perl script to display statistics of the
+		global Covid-19 situation.
+
+USAGE: $0 [--top=n| --help]
+
+	--top=n : Display only top 'n' results.
+	--help	: Display this help message and exit.
+EOF
+  exit( 0 );
 }
 
 # Run headless Chrome instance and
@@ -53,8 +68,8 @@ $table->parse_file( $tmpfile ); # Parse dumped HTML
 # Load table rows into output table
 LOAD: for ( $table->tables() ) {
   for my $row ( $_->rows() ) {
-    state $counter = 1;		   # Loop counter
-    $_ = trim( $_ ) for ( @$row ); # Trim additional whitespace
+    state $counter = 1;			# Loop counter
+    $_ = trim( $_ ) for ( @$row );	# Trim additional whitespace
     $output->load( $row );
     last LOAD if $results and $counter++ == $results; # Quit if max number of results reached
   }
