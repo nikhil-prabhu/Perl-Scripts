@@ -56,10 +56,11 @@ if ( $params{ help } ) {
 $0:	A simple Perl script to display statistics of the
 		global Covid-19 situation.
 
-USAGE: $0 [--top=n| --help]
+USAGE: $0 [--top=n| --country=country| --help]
 
-	--top=n : Display only top 'n' results.
-	--help	: Display this help message and exit.
+	--top=n			: Display only top 'n' results.
+	--country=country	: Display details only for specific country.
+	--help			: Display this help message and exit.
 EOF
   exit( 0 );
 }
