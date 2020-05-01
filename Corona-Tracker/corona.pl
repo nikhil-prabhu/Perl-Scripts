@@ -24,13 +24,15 @@ my $table	= HTML::TableExtract->new( headers =>
 					    "Total Recovered",
 					    "Total Deaths"] );
 my $output	= Text::Table->new( \'| ',
+				    "No. ",
+				    \' | ',
 				    "Country               ",
 				    \' | ',
-				    "Total Confirmed ",
+				    "Confirmed ",
 				    \' | ',
-				    "Total Recovered ",
+				    "Recovered ",
 				    \' | ',
-				    "Total Deaths ",
+				    "Deaths ",
 				    \' |' );
 my $output_rule = $output->rule(qw/- +/); # Table formatting rule
 my %params;				  # Script parameters
@@ -75,6 +77,7 @@ LOAD: for ( $table->tables() ) {
   for my $row ( $_->rows() ) {
     state $counter = 1;		   # Loop counter
     $_ = trim( $_ ) for ( @$row ); # Trim additional whitespace
+    unshift @$row, $counter;	   # Add row number to first column
 
     # Load only specific country data (if --country param used)
     if ( $country ) {
@@ -89,6 +92,7 @@ LOAD: for ( $table->tables() ) {
     }
 
     last LOAD if $results and $counter++ == $results; # Quit if max number of results reached
+    $counter++ unless $results;	# Increment counter if --results param not used
   }
 }
 
