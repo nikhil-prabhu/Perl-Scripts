@@ -12,6 +12,7 @@ use HTML::TableExtract;
 use Text::Table;
 use String::Util qw(trim);
 use File::Tempdir;
+use Getopt::Long;
 
 my $tmp		= File::Tempdir->new();
 my $tmpdir	= $tmp->name();		 # Temporary directory
@@ -32,6 +33,14 @@ my $output	= Text::Table->new( \'| ',
 				    "Total Deaths ",
 				    \' |' );
 my $output_rule = $output->rule(qw/- +/); # Table formatting rule
+my %params;				  # Script parameters
+my $results;			# Number of results to display
+
+GetOptions( \%params, "top:s");
+
+if ( $params{ top } ) {
+  $results = $params{ top };
+}
 
 # Run headless Chrome instance and
 # dump generated HTMl to tempfile.
@@ -39,13 +48,15 @@ system(
        "google-chrome --headless --disable-gpu --dump-dom $url > $tmpfile"
       );
 
-$table->parse_file( $tmpfile );	# Parse dumped HTML
+$table->parse_file( $tmpfile ); # Parse dumped HTML
 
 # Load table rows into output table
-for ( $table->tables() ) {
+LOAD: for ( $table->tables() ) {
   for my $row ( $_->rows() ) {
+    state $counter = 1;		   # Loop counter
     $_ = trim( $_ ) for ( @$row ); # Trim additional whitespace
     $output->load( $row );
+    last LOAD if $results and $counter++ == $results; # Quit if max number of results reached
   }
 }
 
