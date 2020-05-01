@@ -35,12 +35,17 @@ my $output	= Text::Table->new( \'| ',
 my $output_rule = $output->rule(qw/- +/); # Table formatting rule
 my %params;				  # Script parameters
 my $results;			# Number of results to display
+my $country;
 
-GetOptions( \%params, "top:s", "help");
+GetOptions( \%params, "top:s", "country:s", "help");
 
 # Custom number of results to display
 if ( $params{ top } ) {
   $results = $params{ top };
+}
+
+if ( $params{ country } ) {
+  $country = $params{ country };
 }
 
 # Help message
@@ -68,9 +73,21 @@ $table->parse_file( $tmpfile ); # Parse dumped HTML
 # Load table rows into output table
 LOAD: for ( $table->tables() ) {
   for my $row ( $_->rows() ) {
-    state $counter = 1;			# Loop counter
-    $_ = trim( $_ ) for ( @$row );	# Trim additional whitespace
-    $output->load( $row );
+    state $counter = 1;		   # Loop counter
+    $_ = trim( $_ ) for ( @$row ); # Trim additional whitespace
+
+    # Load only specific country data (if --country param used)
+    if ( $country ) {
+      if ( $row->[0] =~ /$country/i ) {
+	$output->load( $row );
+	last LOAD;
+      } else {
+	next;
+      }
+    } else {
+      $output->load( $row );
+    }
+
     last LOAD if $results and $counter++ == $results; # Quit if max number of results reached
   }
 }
