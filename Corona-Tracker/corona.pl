@@ -39,7 +39,7 @@ system(
        "google-chrome --headless --disable-gpu --dump-dom $url > $tmpfile"
       );
 
-$table->parse_file( $tmpfile );		# Parse dumped HTML
+$table->parse_file( $tmpfile );	# Parse dumped HTML
 
 # Load table rows into output table
 for ( $table->tables() ) {
@@ -49,12 +49,15 @@ for ( $table->tables() ) {
   }
 }
 
+# Use UNIX 'more' utility as pager
+open my $PAGER, "| more" or die "$!\n";
+
 # Print table title
-print $output_rule . $output->title() . $output_rule;
+$PAGER->print( $output_rule . $output->title() . $output_rule );
 
 # Print table body
 for ( $output->body() ) {
-  print $_ . $output_rule;
+  $PAGER->print( $_ . $output_rule );
 }
 
 unlink $tmpfile;		# Remove temporary file
