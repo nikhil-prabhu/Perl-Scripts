@@ -17,6 +17,7 @@ use Getopt::Long;
 my $tmp		= File::Tempdir->new();
 my $tmpdir	= $tmp->name();		 # Temporary directory
 my $tmpfile	= "$tmpdir/corona.html"; # Temporary file
+my $cachefile	= "./.corona.pl.cache"; # Cache file
 my $url		= "https://coronatracker.com/analytics"; # Tracker URL
 my $table	= HTML::TableExtract->new( headers =>
 					   ["Country",
@@ -39,15 +40,21 @@ my %params;				  # Script parameters
 my $results;			# Number of results to display
 my $country;
 
-GetOptions( \%params, "top:s", "country:s", "help");
+GetOptions( \%params, "top:s", "country:s", "cache", "help");
 
 # Custom number of results to display
 if ( $params{ top } ) {
   $results = $params{ top };
 }
 
+# User specified country
 if ( $params{ country } ) {
   $country = $params{ country };
+}
+
+# Use/create cache file
+if ( $params{ cache } ) {
+  $tmpfile = $cachefile;
 }
 
 # Help message
@@ -56,10 +63,11 @@ if ( $params{ help } ) {
 $0:	A simple Perl script to display statistics of the
 		global Covid-19 situation.
 
-USAGE: $0 [--top=n| --country=country| --help]
+USAGE: $0 [--top=n| --country=country| --cache| --help]
 
 	--top=n			: Display only top 'n' results.
 	--country=country	: Display details only for specific country.
+	--cache			: Use a cachefile (if available).
 	--help			: Display this help message and exit.
 EOF
   exit( 0 );
@@ -69,23 +77,25 @@ EOF
 # dump generated HTMl to tempfile.
 system(
        "google-chrome --headless --disable-gpu --dump-dom $url > $tmpfile"
-      );
+      ) unless $params{ cache } and ( -e $cachefile );
 
 $table->parse_file( $tmpfile ); # Parse dumped HTML
 
 # Load table rows into output table
 LOAD: for ( $table->tables() ) {
   for my $row ( $_->rows() ) {
-    state $counter = 1;		   # Loop counter
+    state $counter = 1;				    # Loop counter
     $_ = trim( $_ ) for ( @$row ); # Trim additional whitespace
     unshift @$row, $counter;	   # Add row number to first column
 
     # Load only specific country data (if --country param used)
     if ( $country ) {
-      if ( $row->[0] =~ /$country/i ) {
+      if ( $row->[1] =~ /$country/i ) {
 	$output->load( $row );
+	$row->[0] = $counter;
 	last LOAD;
       } else {
+	$counter++;
 	next;
       }
     } else {
@@ -93,7 +103,7 @@ LOAD: for ( $table->tables() ) {
     }
 
     last LOAD if $results and $counter++ == $results; # Quit if max number of results reached
-    $counter++ unless $results;	# Increment counter if --results param not used
+    $counter++ unless $results; # Increment counter if --results param not used
   }
 }
 
@@ -108,5 +118,5 @@ for ( $output->body() ) {
   $PAGER->print( $_ . $output_rule );
 }
 
-unlink $tmpfile;		# Remove temporary file
-unlink $tmpdir;			# Remove temporary directory
+unlink $tmpfile unless $params{ cache }; # Remove temporary file
+unlink $tmpdir;				 # Remove temporary directory
