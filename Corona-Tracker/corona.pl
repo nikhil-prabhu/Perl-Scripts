@@ -13,11 +13,12 @@ use Text::Table;
 use String::Util qw(trim);
 use File::Tempdir;
 use Getopt::Long;
+use File::Copy;
 
 my $tmp		= File::Tempdir->new();
 my $tmpdir	= $tmp->name();		 # Temporary directory
 my $tmpfile	= "$tmpdir/corona.html"; # Temporary file
-my $cachefile	= "./.corona.pl.cache"; # Cache file
+my $cachefile	= "./.corona.pl.cache";	 # Cache file
 my $url		= "https://coronatracker.com/analytics"; # Tracker URL
 my $table	= HTML::TableExtract->new( headers =>
 					   ["Country",
@@ -84,7 +85,7 @@ $table->parse_file( $tmpfile ); # Parse dumped HTML
 # Load table rows into output table
 LOAD: for ( $table->tables() ) {
   for my $row ( $_->rows() ) {
-    state $counter = 1;				    # Loop counter
+    state $counter = 1;		   # Loop counter
     $_ = trim( $_ ) for ( @$row ); # Trim additional whitespace
     unshift @$row, $counter;	   # Add row number to first column
 
@@ -118,5 +119,6 @@ for ( $output->body() ) {
   $PAGER->print( $_ . $output_rule );
 }
 
+copy($tmpfile, $cachefile) unless $params{ cache }; # Turn temporary file into cachefile
 unlink $tmpfile unless $params{ cache }; # Remove temporary file
 unlink $tmpdir;				 # Remove temporary directory
