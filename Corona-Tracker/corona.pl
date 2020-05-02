@@ -29,10 +29,23 @@ my $data	= decode_json( $response ); # Parsed JSON data
 my %params;				    # Script parameters
 
 # Get script parameters
-GetOptions( \%params, "daily", "country:s", "top:s", "reverse", "help" );
+GetOptions(
+	   \%params,
+	   "daily",
+	   "country:s",
+	   "top:s",
+	   "reverse",
+	   "less",
+	   "help"
+	  );
 
-# Use UNIX 'more' utility as pager for results
-open my $PAGER, "| more" or die "$!\n";
+# Use pager to print results
+my $PAGER;
+if ( $params{ less } ) {
+  open $PAGER, "| less" or die "$!\n";
+} else {
+  open $PAGER, "| more" or die "$!\n";
+}
 
 if ( $params{ help } ) {
   print <<EOF;
@@ -47,6 +60,7 @@ USAGE: $0 [--help| --country=cc| --top=n| --daily]
 	--top=n		: Only display top 'n' countries.
 	--daily		: Display daily stats and active cases.
 	--reverse	: Display stats in reverse (ascending) order.
+	--less		: Use 'less' as the pager instead of 'more'.
 
 EOF
   exit( 0 );
@@ -127,7 +141,7 @@ sub total_stats() {
 	    $totalDeaths
 	   ];
 
-     # Load rows into output table
+    # Load rows into output table
     if ( $params{ country }) {
       if ( $countryCode =~ /$params{ country }/i ) {
 	$table->load( $row );
