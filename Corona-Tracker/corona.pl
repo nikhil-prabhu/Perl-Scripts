@@ -29,7 +29,7 @@ my $data	= decode_json( $response ); # Parsed JSON data
 my %params;				    # Script parameters
 
 # Get script parameters
-GetOptions( \%params, "daily", "country:s", "top:s", "help" );
+GetOptions( \%params, "daily", "country:s", "top:s", "reverse", "help" );
 
 # Use UNIX 'more' utility as pager for results
 open my $PAGER, "| more" or die "$!\n";
@@ -46,10 +46,15 @@ USAGE: $0 [--help| --country=cc| --top=n| --daily]
 	--country=cc	: Display stats for country specifed by code 'cc'.
 	--top=n		: Only display top 'n' countries.
 	--daily		: Display daily stats and active cases.
+	--reverse	: Display stats in reverse (ascending) order.
 
 EOF
   exit( 0 );
 } else {
+  if ( $params{ reverse } ) {
+    @$data = reverse @$data;	# Reverse order of data
+  }
+
   if ( $params{ daily } ) {
     daily_stats();
   } else {
