@@ -7,118 +7,221 @@
 # statistics of the global Covid-19 situation.
 #
 
+# Modules
+
 use Modern::Perl;
-use HTML::TableExtract;
+use LWP::Simple;
 use Text::Table;
-use String::Util qw(trim);
-use File::Tempdir;
+use Number::Format;
 use Getopt::Long;
-use File::Copy;
+use JSON qw(decode_json);
 
-my $tmp		= File::Tempdir->new();
-my $tmpdir	= $tmp->name();		 # Temporary directory
-my $tmpfile	= "$tmpdir/corona.html"; # Temporary file
-my $cachefile	= "./.corona.pl.cache";	 # Cache file
-my $url		= "https://coronatracker.com/analytics"; # Tracker URL
-my $table	= HTML::TableExtract->new( headers =>
-					   ["Country",
-					    "Total Confirmed",
-					    "Total Recovered",
-					    "Total Deaths"] );
-my $output	= Text::Table->new( \'| ',
-				    "No. ",
-				    \' | ',
-				    "Country               ",
-				    \' | ',
-				    "Confirmed ",
-				    \' | ',
-				    "Recovered ",
-				    \' | ',
-				    "Deaths ",
-				    \' |' );
-my $output_rule = $output->rule(qw/- +/); # Table formatting rule
-my %params;				  # Script parameters
-my $results;			# Number of results to display
-my $country;
+# Subroutine declarations
 
-GetOptions( \%params, "top:s", "country:s", "cache", "help");
+sub total_stats();		# Display total statistics
+sub daily_stats();		# Display daily statistics
 
-# Custom number of results to display
-if ( $params{ top } ) {
-  $results = $params{ top };
-}
+# Variables
 
-# User specified country
-if ( $params{ country } ) {
-  $country = $params{ country };
-}
+my $uri		= 'https://api.coronatracker.com/v3/stats/worldometer/topCountry'; # API key
+my $response	= get( $uri );		    # Response from URI
+my $data	= decode_json( $response ); # Parsed JSON data
+my %params;				    # Script parameters
 
-# Use/create cache file
-if ( $params{ cache } ) {
-  $tmpfile = $cachefile;
-}
+# Get script parameters
+GetOptions( \%params, "daily", "country:s", "top:s", "help" );
 
-# Help message
+# Use UNIX 'more' utility as pager for results
+open my $PAGER, "| more" or die "$!\n";
+
 if ( $params{ help } ) {
   print <<EOF;
-$0:	A simple Perl script to display statistics of the
-		global Covid-19 situation.
 
-USAGE: $0 [--top=n| --country=country| --cache| --help]
+$0:	A simple Perl script to display total or daily
+		statistics of the global Covid-19 situation.
 
-	--top=n			: Display only top 'n' results.
-	--country=country	: Display details only for specific country.
-	--cache			: Use a cachefile (if available).
-	--help			: Display this help message and exit.
+USAGE: $0 [--help| --country=cc| --top=n| --daily]
+
+	--help		: Print this help message and exit.
+	--country=cc	: Display stats for country specifed by code 'cc'.
+	--top=n		: Only display top 'n' countries.
+	--daily		: Display daily stats and active cases.
+
 EOF
   exit( 0 );
-}
-
-# Run headless Chrome instance and
-# dump generated HTMl to tempfile.
-system(
-       "google-chrome --headless --disable-gpu --dump-dom $url > $tmpfile"
-      ) unless $params{ cache } and ( -e $cachefile );
-
-$table->parse_file( $tmpfile ); # Parse dumped HTML
-
-# Load table rows into output table
-LOAD: for ( $table->tables() ) {
-  for my $row ( $_->rows() ) {
-    state $counter = 1;		   # Loop counter
-    $_ = trim( $_ ) for ( @$row ); # Trim additional whitespace
-    unshift @$row, $counter;	   # Add row number to first column
-
-    # Load only specific country data (if --country param used)
-    if ( $country ) {
-      if ( $row->[1] =~ /$country/i ) {
-	$output->load( $row );
-	$row->[0] = $counter;
-	last LOAD;
-      } else {
-	$counter++;
-	next;
-      }
-    } else {
-      $output->load( $row );
-    }
-
-    last LOAD if $results and $counter++ == $results; # Quit if max number of results reached
-    $counter++ unless $results; # Increment counter if --results param not used
+} else {
+  if ( $params{ daily } ) {
+    daily_stats();
+  } else {
+    total_stats();
   }
 }
 
-# Use UNIX 'more' utility as pager
-open my $PAGER, "| more" or die "$!\n";
+# Subroutine definitions
 
-# Print table title
-$PAGER->print( $output_rule . $output->title() . $output_rule );
+sub total_stats() {
+  # Displays total statistics
 
-# Print table body
-for ( $output->body() ) {
-  $PAGER->print( $_ . $output_rule );
+  my $countryCode;
+  my $countryName;
+  my $totalConfirmed;
+  my $totalRecovered;
+  my $totalDeaths;
+  my $row;
+  my $num_format = Number::Format->new( -thousands_sep => ',' );
+  state $counter = 1;
+
+  # Define output table header format
+  my $table = Text::Table->new(
+			       \'| ',
+			       "Code",
+			       \' | ',
+			       "Country        ",
+			       \' | ',
+			       "Total Confirmed ",
+			       \' | ',
+			       "Total Recovered ",
+			       \' | ',
+			       "Total Deaths ",
+			       \' |'
+			      );
+  my $table_rule = $table->rule( qw/- +/ ); # Output table formatting rule
+
+  # Assign extracted data to variables
+  for ( @$data ) {
+    $countryCode	= $_->{ countryCode };
+    $countryName	= $_->{ country };
+    $totalConfirmed	= $_->{ totalConfirmed };
+    $totalRecovered	= $_->{ totalRecovered };
+    $totalDeaths	= $_->{ totalDeaths };
+
+    # Truncate country name
+    if ( length( $countryName ) > 12 ) {
+      $countryName = substr( $countryName, 0, 11 ) . "...";
+    }
+
+    # Null country code
+    unless ( $countryCode ) {
+      $countryCode = "-";
+    }
+
+    # Format numeric data
+    $totalConfirmed	= $num_format->format_number( $totalConfirmed );
+    $totalRecovered	= $num_format->format_number( $totalRecovered );
+    $totalDeaths	= $num_format->format_number( $totalDeaths );
+
+    # Define a table row
+    $row = [
+	    $countryCode,
+	    $countryName,
+	    $totalConfirmed,
+	    $totalRecovered,
+	    $totalDeaths
+	   ];
+
+     # Load rows into output table
+    if ( $params{ country }) {
+      if ( $countryCode =~ /$params{ country }/i ) {
+	$table->load( $row );
+	last;
+      }
+    } else {
+      $table->load( $row );
+    }
+
+    last if $params{ top } and $counter++ == $params{ top };
+  }
+
+  # Print table header
+  $PAGER->print( $table_rule . $table->title() . $table_rule );
+
+  # Print table body
+  for ($table->body()) {
+    $PAGER->print( $_ . $table_rule );
+  }
 }
 
-copy($tmpfile, $cachefile) unless $params{ cache }; # Turn temporary file into cachefile
-unlink $tmpfile unless $params{ cache }; # Remove temporary file
-unlink $tmpdir;				 # Remove temporary directory
+sub daily_stats() {
+  # Displays daily statistics
+
+  my $countryCode;
+  my $countryName;
+  my $dailyConfirmed;
+  my $dailyDeaths;
+  my $activeCases;
+  my $row;
+  my $num_format = Number::Format->new( -thousands_sep => ',' );
+  state $counter = 1;
+
+  # Define output table header format
+  my $table = Text::Table->new(
+			       \'| ',
+			       "Code",
+			       \' | ',
+			       "Country        ",
+			       \' | ',
+			       "Daily Confirmed ",
+			       \' | ',
+			       "Daily Deaths ",
+			       \' | ',
+			       "Active Cases ",
+			       \' |'
+			      );
+  my $table_rule = $table->rule( qw/- +/ ); # Output table formatting rule
+
+  # Assign extracted data to variables
+  for ( @$data ) {
+    $countryCode	= $_->{ countryCode };
+    $countryName	= $_->{ country };
+    $dailyConfirmed	= $_->{ dailyConfirmed };
+    $dailyDeaths	= $_->{ dailyDeaths };
+    $activeCases	= $_->{ activeCases };
+
+    # Encode country names into utf8
+    utf8::encode( $countryName );
+
+    # Truncate country name
+    if ( length( $countryName ) > 12 ) {
+      $countryName = substr( $countryName, 0, 11 ) . "...";
+    }
+
+    # Null country code
+    unless ( $countryCode ) {
+      $countryCode = "-";
+    }
+
+    # Format numeric data
+    $dailyConfirmed	= $num_format->format_number( $dailyConfirmed );
+    $dailyDeaths	= $num_format->format_number( $dailyDeaths );
+    $activeCases	= $num_format->format_number( $activeCases );
+
+    # Define a table row
+    $row = [
+	    $countryCode,
+	    $countryName,
+	    $dailyConfirmed,
+	    $dailyDeaths,
+	    $activeCases
+	   ];
+
+    # Load rows into output table
+    if ( $params{ country }) {
+      if ( $countryCode =~ /$params{ country }/i ) {
+	$table->load( $row );
+	last;
+      }
+    } else {
+      $table->load( $row );
+    }
+
+    last if $params{ top } and $counter++ == $params{ top };
+  }
+
+  # Print table header
+  $PAGER->print( $table_rule . $table->title() . $table_rule );
+
+  # Print table body
+  for ($table->body()) {
+    $PAGER->print( $_ . $table_rule );
+  }
+}
