@@ -100,6 +100,9 @@ sub total_stats() {
     $totalRecovered	= $_->{ totalRecovered };
     $totalDeaths	= $_->{ totalDeaths };
 
+    # Encode country names into utf8
+    utf8::encode( $countryName );
+
     # Truncate country name
     if ( length( $countryName ) > 12 ) {
       $countryName = substr( $countryName, 0, 11 ) . "...";
@@ -134,6 +137,7 @@ sub total_stats() {
       $table->load( $row );
     }
 
+    # Quit if max results reached
     last if $params{ top } and $counter++ == $params{ top };
   }
 
@@ -219,6 +223,7 @@ sub daily_stats() {
       $table->load( $row );
     }
 
+    # Quit if max results reached
     last if $params{ top } and $counter++ == $params{ top };
   }
 
