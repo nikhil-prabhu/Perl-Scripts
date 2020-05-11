@@ -1,2 +1,22 @@
-# Perl-Scripts
-A repository containing simple practice scripts written in Perl5.
+* Perl-Scripts
+  
+  A repository containing simple practice scripts written in Perl5.
+  
+* About
+  
+  This repository contains all the scripts that I wrote/write while learning and practicing Perl5. I'm quite new to Perl at the time of writing this, so the scripts may not be that practical and may lack quality; but this should improve as I keep learning.
+  
+* Scripts
+
+  | Name            | Description                                                                    |
+  |-----------------+--------------------------------------------------------------------------------|
+  | [[https://github.com/nikhil-prabhu/Perl-Scripts/tree/master/Distrowatch-HPD][Distrowatch-HPD]] | Script to display top 100 Linux/UNIX distros on [[https://distrowatch.com][Distrowatch]].                   |
+  | [[https://github.com/nikhil-prabhu/Perl-Scripts/tree/master/Corona-Tracker][Corona-Tracker]]  | Script to display total and daily global statistics of the Covid-19 situation. |
+
+* Resources
+
+  These are the resources I use/used for learning.
+
+** [[https://learn.perl.org/books/beginning-perl/][Beginning Perl]] - Simon Cozens
+** [[http://modernperlbooks.com/books/modern_perl_2016/index.html][Modern Perl]] - Chromatic
+** [[https://www.reddit.com/r/perl][r/perl]]
