@@ -8,8 +8,8 @@
   
 * Scripts
 
-  | Name            | Description                                                                    |
-  |-----------------+--------------------------------------------------------------------------------|
+  | Name            | Description                                                          |
+  |-----------------+----------------------------------------------------------------------|
   | [[https://github.com/nikhil-prabhu/Perl-Scripts/tree/master/Distrowatch-HPD][Distrowatch-HPD]] | Display top 100 Linux/UNIX distros on [[https://distrowatch.com][Distrowatch]].                   |
   | [[https://github.com/nikhil-prabhu/Perl-Scripts/tree/master/Corona-Tracker][Corona-Tracker]]  | Display total and daily global statistics of the Covid-19 situation. |
 
