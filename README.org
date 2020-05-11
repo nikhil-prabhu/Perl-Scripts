@@ -10,13 +10,13 @@
 
   | Name            | Description                                                                    |
   |-----------------+--------------------------------------------------------------------------------|
-  | [[https://github.com/nikhil-prabhu/Perl-Scripts/tree/master/Distrowatch-HPD][Distrowatch-HPD]] | Script to display top 100 Linux/UNIX distros on [[https://distrowatch.com][Distrowatch]].                   |
-  | [[https://github.com/nikhil-prabhu/Perl-Scripts/tree/master/Corona-Tracker][Corona-Tracker]]  | Script to display total and daily global statistics of the Covid-19 situation. |
+  | [[https://github.com/nikhil-prabhu/Perl-Scripts/tree/master/Distrowatch-HPD][Distrowatch-HPD]] | Display top 100 Linux/UNIX distros on [[https://distrowatch.com][Distrowatch]].                   |
+  | [[https://github.com/nikhil-prabhu/Perl-Scripts/tree/master/Corona-Tracker][Corona-Tracker]]  | Display total and daily global statistics of the Covid-19 situation. |
 
 * Resources
 
   These are the resources I use/used for learning.
 
-** [[https://learn.perl.org/books/beginning-perl/][Beginning Perl]] - Simon Cozens
-** [[http://modernperlbooks.com/books/modern_perl_2016/index.html][Modern Perl]] - Chromatic
-** [[https://www.reddit.com/r/perl][r/perl]]
+  - [[https://learn.perl.org/books/beginning-perl/][Beginning Perl]] - Simon Cozens
+  - [[http://modernperlbooks.com/books/modern_perl_2016/index.html][Modern Perl]] - Chromatic
+  - [[https://www.reddit.com/r/perl][r/perl]]
